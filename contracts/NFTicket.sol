@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/drafts/Counters.sol";
 import "@openzeppelin/contracts/payment/PullPayment.sol";
 
 import "./Verify.sol";
+import "./ClaimsVerifier.sol";
 
 contract OwnableDelegateProxy {}
 
@@ -31,6 +32,7 @@ contract NFTicket is ERC721Metadata, Ownable, PullPayment {
 
     address public proxyRegistryAddress;
     address public verifyProxy;
+    address public claimsVerifier;
     bool public saleIsActive = false;
 
     // Constant
@@ -42,11 +44,13 @@ contract NFTicket is ERC721Metadata, Ownable, PullPayment {
     constructor(
         string memory baseURI,
         address proxy,
-        address verifyp
+        address verifyp,
+        address claimsVerifierp
     ) public ERC721Metadata("NFTicket", "TIK") {
         baseTokenURI = baseURI;
         proxyRegistryAddress = proxy;
         verifyProxy = verifyp;
+        claimsVerifier = claimsVerifierp;
     }
 
     /**
@@ -57,8 +61,26 @@ contract NFTicket is ERC721Metadata, Ownable, PullPayment {
     function mintTo(
         address _to,
         uint256 _tokenId,
-        Verify.Verfiy_param memory _verify_param
+        Verify.Verfiy_param memory _verify_param,
+        ClaimsVerifier.VerifiableCredential memory vc,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) public payable {
+        bool a;
+        bool b;
+        bool c;
+        bool d;
+        bool e;
+        (a, b, c, d, e) = ClaimsVerifier(claimsVerifier).verifyCredential(
+            vc,
+            v,
+            r,
+            s
+        );
+
+        //require(a == b == c == d == e == true, "Credential not registered");
+
         require(
             Verify(verifyProxy).verify(_verify_param),
             "Restriction not verified"
